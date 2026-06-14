@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trung Hòa - Thảo Vy – Thành Hôn</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --red: #8B1A1A;
+      --red-light: #A52020;
+      --gold: #C9A84C;
+      --gold-light: #E2C97A;
+      --cream: #FDF8F0;
+      --dark: #2C1810;
+      --text: #4A2C1A;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--cream);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── PETALS ── */
+    #petals-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── ENVELOPE INTRO ── */
+    #envelope-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--red);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    #envelope-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .envelope-wrap {
+      position: relative;
+      width: min(340px, 88vw);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .envelope-body {
+      background: #F7EED8;
+      border-radius: 4px 4px 8px 8px;
+      width: 100%;
+      padding-bottom: 62%;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+
+    .envelope-body::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 55%;
+      background: #EEE0C0;
+      clip-path: polygon(0 100%, 50% 0%, 100% 100%);
+    }
+
+    .envelope-body::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 55%;
+      background: #F2E8CC;
+      clip-path: polygon(0 0, 50% 55%, 100% 0, 100% 100%, 0 100%);
+    }
+
+    .envelope-seal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      width: 64px;
+      height: 64px;
+      background: var(--red);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      font-family: 'Great Vibes', cursive;
+      color: var(--gold-light);
+      font-size: 28px;
+      letter-spacing: -1px;
+    }
+
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52%;
+      background: #EDE0C2;
+      clip-path: polygon(0 0, 50% 88%, 100% 0);
+      transform-origin: top center;
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 3;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .envelope-flap.open {
+      transform: rotateX(180deg);
+    }
+
+    .letter-peek {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 82%;
+      background: linear-gradient(135deg, #FDF8F0 0%, #F5EDD8 100%);
+      border-radius: 3px;
+      text-align: center;
+      padding: 14px 12px 12px;
+      font-family: 'Great Vibes', cursive;
+      font-size: 22px;
+      color: var(--red);
+      z-index: 1;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+      transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
+    }
+
+    .letter-peek.reveal {
+      transform: translateX(-50%) translateY(-70px);
+    }
+
+    .tap-hint {
+      margin-top: 28px;
+      color: rgba(255, 255, 255, 0.7);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 300;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      animation: pulse-hint 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-hint {
+
+      0%,
+      100% {
+        opacity: .5
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    /* ── MAIN CONTENT ── */
+    #main-content {
+      opacity: 0;
+      transition: opacity 1s ease 0.3s;
+    }
+
+    #main-content.visible {
+      opacity: 1;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: var(--red);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(201, 168, 76, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(201, 168, 76, 0.08) 0%, transparent 60%);
+    }
+
+    .hero-ornament {
+      width: min(280px, 70vw);
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .hero-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      letter-spacing: 5px;
+      font-weight: 400;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .bride-family,
+    .groom-family {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0 20px;
+      align-items: start;
+      width: min(620px, 90vw);
+      margin-bottom: 40px;
+    }
+
+    .family-side {
+      font-size: 13px;
+      line-height: 1.9;
+      color: rgba(255, 255, 255, 0.88);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+    }
+
+    .family-side .family-head {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      color: var(--gold-light);
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .family-side .parent-name {
+      font-weight: 400;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .family-side .address {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 4px;
+    }
+
+    .divider-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 20px;
+    }
+
+    .divider-center span {
+      color: var(--gold-light);
+      font-size: 22px;
+      opacity: 0.7;
+    }
+
+    .announce {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(15px, 3vw, 18px);
+      color: rgba(255, 255, 255, 0.8);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .names-block {
+      margin: 0 0 32px;
+    }
+
+    .name-bride {
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(52px, 12vw, 82px);
+      color: #fff;
+      line-height: 1;
+      display: block;
+    }
+
+    .name-ampersand {
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(30px, 7vw, 48px);
+      color: var(--gold-light);
+      display: block;
+      margin: -4px 0 -8px;
+    }
+
+    .name-groom {
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(52px, 12vw, 82px);
+      color: #fff;
+      line-height: 1;
+      display: block;
+    }
+
+    .role-labels {
+      display: flex;
+      gap: 120px;
+      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: rgba(255, 255, 255, 0.55);
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    .gold-line {
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 0 auto 28px;
+    }
+
+    .wedding-date-block {
+      text-align: center;
+    }
+
+    .wedding-date-block .event-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .wedding-date-block .event-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.8);
+      font-style: italic;
+      margin-bottom: 8px;
+    }
+
+    .wedding-date-block .date-big {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(34px, 8vw, 52px);
+      color: #fff;
+      font-weight: 300;
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .wedding-date-block .lunar {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.45);
+      letter-spacing: 1px;
+    }
+
+    .wedding-date-block .time-tag {
+      display: inline-block;
+      margin-top: 12px;
+      background: var(--gold);
+      color: var(--dark);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 7px 20px;
+      border-radius: 2px;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.5;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .scroll-hint span {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    .scroll-arrow {
+      width: 20px;
+      height: 20px;
+      border-right: 1px solid #fff;
+      border-bottom: 1px solid #fff;
+      transform: rotate(45deg);
+      margin-top: -6px;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: translateX(-50%) translateY(0)
+      }
+
+      50% {
+        transform: translateX(-50%) translateY(8px)
+      }
+    }
+
+    /* ── INVITE SECTION ── */
+    .invite-section {
+      background: var(--cream);
+      padding: 80px 24px;
+      text-align: center;
+      position: relative;
+    }
+
+    .invite-section::before,
+    .invite-section::after {
+      content: '';
+      display: block;
+      width: 80px;
+      height: 1px;
+      background: var(--gold);
+      margin: 0 auto 28px;
+    }
+
+    .invite-section::after {
+      margin: 28px auto 0;
+    }
+
+    .thiep-moi-script {
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(50px, 12vw, 76px);
+      color: var(--red);
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+
+    .invite-dear {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .invite-text {
+      font-size: clamp(16px, 3.5vw, 20px);
+      line-height: 2;
+      color: var(--text);
+      font-style: italic;
+      max-width: 480px;
+      margin: 0 auto 40px;
+    }
+
+    .venue-block {
+      background: var(--red);
+      color: #fff;
+      border-radius: 4px;
+      padding: 40px 32px;
+      max-width: 480px;
+      margin: 0 auto 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .venue-block::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(201, 168, 76, 0.08);
+    }
+
+    .venue-block .venue-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .venue-block .venue-name {
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(36px, 9vw, 52px);
+      line-height: 1.1;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .venue-block .venue-hall {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      color: var(--gold-light);
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+
+    .venue-block .venue-address {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.7;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── RECEPTION ── */
+    .reception-section {
+      background: var(--cream);
+      padding: 0 24px 80px;
+      text-align: center;
+    }
+
+    .reception-card {
+      border: 1px solid rgba(201, 168, 76, 0.35);
+      border-radius: 4px;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 40px 28px;
+      position: relative;
+    }
+
+    .reception-card::before,
+    .reception-card::after {
+      content: '✦';
+      position: absolute;
+      color: var(--gold);
+      font-size: 16px;
+      opacity: 0.5;
+    }
+
+    .reception-card::before {
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .reception-card::after {
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .rec-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .day-big {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(32px, 8vw, 50px);
+      color: var(--red);
+      font-weight: 300;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .day-weekday {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      color: var(--text);
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+
+    .day-lunar {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      color: #999;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .time-row {
+      display: flex;
+      gap: 0;
+      justify-content: center;
+      margin-bottom: 20px;
+      border: 1px solid rgba(201, 168, 76, 0.25);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .time-cell {
+      flex: 1;
+      padding: 14px 8px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .time-cell+.time-cell {
+      border-left: 1px solid rgba(201, 168, 76, 0.25);
+    }
+
+    .time-cell .tc-label {
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 4px;
+    }
+
+    .time-cell .tc-val {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--red);
+    }
+
+    .rec-venue-name {
+      font-family: 'Great Vibes', cursive;
+      font-size: 40px;
+      color: var(--red);
+      margin-bottom: 6px;
+    }
+
+    .rec-hall {
+      font-size: 14px;
+      color: var(--gold);
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+
+    .rec-address {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      color: #888;
+      line-height: 1.7;
+    }
+
+    /* ── CLOSING ── */
+    .closing-section {
+      background: var(--red);
+      padding: 70px 24px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .closing-quote {
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(38px, 9vw, 60px);
+      color: var(--gold-light);
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .closing-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(15px, 3vw, 18px);
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 2;
+      max-width: 380px;
+      margin: 0 auto 32px;
+    }
+
+    .hearts {
+      font-size: 22px;
+      letter-spacing: 8px;
+      color: var(--gold-light);
+      opacity: 0.6;
+    }
+
+    /* ── MAP BUTTON ── */
+    .map-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 28px;
+      background: transparent;
+      border: 1px solid rgba(201, 168, 76, 0.5);
+      color: var(--gold-light);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 12px 24px;
+      border-radius: 2px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .map-btn:hover {
+      background: var(--gold);
+      color: var(--dark);
+      border-color: var(--gold);
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .reveal.in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 480px) {
+
+      .bride-family,
+      .groom-family {
+        grid-template-columns: 1fr 24px 1fr;
+        gap: 0 8px;
+      }
+
+      .role-labels {
+        gap: 80px;
+      }
+
+      .venue-block,
+      .reception-card {
+        padding: 28px 20px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ── MUSIC PLAYER ── */
+    #music-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 8888;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 2px solid var(--gold);
+      color: var(--gold-light);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      transition: transform 0.2s ease, background 0.2s ease;
+      animation: music-pulse 2.4s ease-in-out infinite;
+    }
+
+    #music-btn:hover {
+      transform: scale(1.12);
+      background: var(--gold);
+      color: var(--dark);
+    }
+
+    #music-btn.paused {
+      animation: none;
+      opacity: 0.75;
+    }
+
+    @keyframes music-pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(201, 168, 76, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 10px rgba(201, 168, 76, 0);
+      }
+    }
+
+    #music-tooltip {
+      position: fixed;
+      bottom: 84px;
+      right: 24px;
+      background: rgba(44, 24, 16, 0.92);
+      color: var(--gold-light);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+      z-index: 8887;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    #music-tooltip.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- CANVAS FOR PETALS -->
+  <canvas id="petals-canvas"></canvas>
+
+  <!-- MUSIC PLAYER (HTML5 Audio phát file mp3) -->
+  <audio id="wedding-audio" loop>
+    <source src="nhac_cuoi.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Nút nhạc nổi -->
+  <button id="music-btn" title="Nhạc nền" aria-label="Bật/tắt nhạc">♪</button>
+  <div id="music-tooltip">🎵 Nhạc cưới</div>
+
+  <!-- ENVELOPE INTRO -->
+  <div id="envelope-screen">
+    <div class="envelope-wrap" id="envelope-wrap">
+      <div class="envelope-body">
+        <div class="envelope-flap" id="envelope-flap"></div>
+        <div class="envelope-seal">N&T</div>
+        <div class="letter-peek" id="letter-peek">Thiệp Mời</div>
+      </div>
+    </div>
+    <p class="tap-hint">Chạm để mở thiệp</p>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content">
+
+    <!-- HERO: Mặt trước thiệp -->
+    <section class="hero">
+      <p class="hero-label">Trân trọng thông báo</p>
+
+      <!-- Gia đình -->
+      <div class="bride-family reveal">
+        <div class="family-side" style="text-align:right">
+          <div class="family-head">Nhà Trai</div>
+          <div class="parent-name">Ông. Nguyễn Trung Thuận </div>
+          <div class="parent-name">Bà. Nguyễn Thị Hồng</div>
+          <div class="address">Thôn 6B<br>EaK Nốp, Đắk Lắk</div>
+        </div>
+        <div class="divider-center"><span>✦</span></div>
+        <div class="family-side" style="text-align:left">
+          <div class="family-head">Nhà Gái</div>
+          <div class="parent-name">Ông. Lê Hữu Tiến</div>
+          <div class="parent-name">Bà. Châu Kim Hồng</div>
+          <div class="address">Tổ dân phố Xuân Hòa 1<br>Ninh Hòa, Khánh Hòa</div>
+        </div>
+      </div>
+
+      <p class="announce reveal">Trân trọng báo tin Lễ Thành Hôn<br>của con chúng tôi</p>
+
+      <!-- Tên chú rể cô dâu (nhà trai: chú rể trước) -->
+      <div class="names-block reveal">
+        <span class="name-bride">Trung Hòa</span>
+        <span class="name-ampersand">&amp;</span>
+        <span class="name-groom">Thảo Vy</span>
+      </div>
+
+      <div class="role-labels reveal">
+        <span>Út Nam</span>
+        <span>Út Nữ</span>
+      </div>
+
+      <div class="gold-line reveal"></div>
+
+      <!-- Hôn lễ -->
+      <div class="wedding-date-block reveal">
+        <p class="event-label">Hôn lễ được cử hành tại tư gia</p>
+        <div class="date-big">31 · 07 · 2026</div>
+        <div class="lunar">Nhằm ngày 18 tháng 06 năm Bính Ngọ</div>
+        <div class="time-tag">Vào lúc 09 : 00</div>
+      </div>
+
+      <div class="scroll-hint">
+        <span>Cuộn xuống</span>
+        <div class="scroll-arrow"></div>
+      </div>
+    </section>
+
+    <!-- INVITE: Mặt sau thiệp -->
+    <section class="invite-section">
+      <div class="thiep-moi-script reveal">Thiệp mời</div>
+      <p class="invite-dear reveal">Trân trọng kính mời</p>
+      <p class="invite-text reveal">
+        đến dự tiệc chung vui cùng gia đình chúng tôi tại
+      </p>
+
+      <div class="venue-block reveal">
+        <p class="venue-label">Địa điểm tiệc cưới</p>
+        <div class="venue-name">Tư Gia Nhà Trai</div>
+        <p class="venue-address">Thôn 6B<br>EaK Nốp, Đắk Lắk</p>
+      </div>
+    </section>
+
+    <!-- RECEPTION DETAILS -->
+    <section class="reception-section">
+      <div class="reception-card reveal">
+        <p class="rec-label">Tiệc Thành Hôn</p>
+        <div class="day-weekday">Thứ 6</div>
+        <div class="day-big">31 · 07 · 2026</div>
+        <div class="day-lunar">Nhằm ngày 18 tháng 06 năm Bính Ngọ</div>
+
+        <div class="time-row">
+          <div class="time-cell">
+            <div class="tc-label">Đón khách</div>
+            <div class="tc-val">10:00</div>
+          </div>
+          <div class="time-cell">
+            <div class="tc-label">Khai tiệc</div>
+            <div class="tc-val">11:00</div>
+          </div>
+        </div>
+
+        <div class="rec-venue-name">Tư Gia</div>
+        <p class="rec-address">Thôn 6B<br>EaK Nốp, Đắk Lắk</p>
+
+        <a class="map-btn"
+          href="https://www.google.com/maps/place/12%C2%B047'03.2%22N+108%C2%B032'39.1%22E/@12.7842303,108.5429676,227m/data=!3m2!1e3!4b1!4m7!1m2!2m1!1sth%C3%B4n+6b+eaknop!3m3!8m2!3d12.784229!4d108.544184?entry=ttu&g_ep=EgoyMDI2MDYxMC4wIKXMDSoASAFQAw%3D%3D"
+          target="_blank" rel="noopener">
+          📍 Xem bản đồ
+        </a>
+      </div>
+    </section>
+
+    <!-- CLOSING -->
+    <section class="closing-section">
+      <div class="closing-quote reveal">Sự hiện diện của Quý Khách<br>là niềm vinh hạnh cho chúng tôi</div>
+      <p class="closing-text reveal">
+        Chúng tôi kính mong Quý Khách<br>
+        sắp xếp thời gian đến chung vui<br>
+        cùng gia đình trong ngày trọng đại này.
+      </p>
+      <div class="hearts reveal">♥ ♥ ♥</div>
+      <div class="gold-line"
+        style="background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5),transparent);margin-top:32px;"></div>
+      <p
+        style="font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.35);margin-top:20px;text-transform:uppercase;">
+        Trung Hòa &amp; Thảo Vy · 2026</p>
+    </section>
+
+  </div><!-- /main-content -->
+
+  <script>
+    /* ── MUSIC PLAYER ── */
+    const musicBtn = document.getElementById('music-btn');
+    const musicTooltip = document.getElementById('music-tooltip');
+    const weddingAudio = document.getElementById('wedding-audio');
+    let musicOn = false;
+
+    function startMusic() {
+      weddingAudio.play().catch(err => console.log("Playback blocked:", err));
+      musicOn = true;
+      musicBtn.textContent = '♫';
+      musicBtn.classList.remove('paused');
+    }
+
+    function stopMusic() {
+      weddingAudio.pause();
+      musicOn = false;
+      musicBtn.textContent = '♪';
+      musicBtn.classList.add('paused');
+    }
+
+    musicBtn.addEventListener('click', () => {
+      if (musicOn) stopMusic(); else startMusic();
+    });
+
+    // Tooltip khi hover
+    musicBtn.addEventListener('mouseenter', () => musicTooltip.classList.add('show'));
+    musicBtn.addEventListener('mouseleave', () => musicTooltip.classList.remove('show'));
+
+    /* ── ENVELOPE OPEN ── */
+    const envelopeWrap = document.getElementById('envelope-wrap');
+    const envelopeFlap = document.getElementById('envelope-flap');
+    const letterPeek = document.getElementById('letter-peek');
+    const envelopeScreen = document.getElementById('envelope-screen');
+    const mainContent = document.getElementById('main-content');
+
+    let opened = false;
+    envelopeWrap.addEventListener('click', openEnvelope);
+
+    function openEnvelope() {
+      if (opened) return;
+      opened = true;
+
+      // Phát nhạc đồng bộ ngay khi người dùng chạm để vượt qua cơ chế chặn autoplay của trình duyệt
+      startMusic();
+
+      envelopeFlap.classList.add('open');
+      setTimeout(() => letterPeek.classList.add('reveal'), 400);
+      setTimeout(() => {
+        envelopeScreen.classList.add('hidden');
+        mainContent.classList.add('visible');
+        startPetals();
+        initReveal();
+      }, 1400);
+    }
+
+    /* ── SCROLL REVEAL ── */
+    function initReveal() {
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); obs.unobserve(e.target); } });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    }
+
+    /* ── PETAL PARTICLE SYSTEM ── */
+    function startPetals() {
+      const canvas = document.getElementById('petals-canvas');
+      const ctx = canvas.getContext('2d');
+      let W, H, petals = [];
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // Spawn petals
+      function spawnPetal() {
+        const size = 6 + Math.random() * 8;
+        petals.push({
+          x: Math.random() * W,
+          y: -size * 2,
+          size,
+          opacity: 0.5 + Math.random() * 0.4,
+          speed: 0.8 + Math.random() * 1.4,
+          drift: (Math.random() - 0.5) * 0.6,
+          spin: (Math.random() - 0.5) * 0.06,
+          angle: Math.random() * Math.PI * 2,
+          // color: alternate red/gold/white
+          color: ['#C9A84C', '#A52020', '#fff', '#E2C97A', '#8B1A1A'][Math.floor(Math.random() * 5)]
+        });
+      }
+
+      // Draw a petal shape
+      function drawPetal(p) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size * 0.45, p.size, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      let frame = 0;
+      function animate() {
+        requestAnimationFrame(animate);
+        ctx.clearRect(0, 0, W, H);
+        frame++;
+        if (frame % 12 === 0 && petals.length < 60) spawnPetal();
+
+        petals = petals.filter(p => {
+          p.y += p.speed;
+          p.x += p.drift + Math.sin(p.y * 0.02) * 0.4;
+          p.angle += p.spin;
+          p.opacity -= 0.0008;
+          drawPetal(p);
+          return p.y < H + 40 && p.opacity > 0.05;
+        });
+      }
+      animate();
+      // Slow down petals after 20s
+      setTimeout(() => { petals.forEach(p => p.speed *= 0.3); }, 20000);
+    }
+  </script>
+</body>
+
+</html>
